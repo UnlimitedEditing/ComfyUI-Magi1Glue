@@ -8,6 +8,7 @@ package is imported. Only bf16 weights are supported (fp8 needs flashinfer.bmm_f
 Layout conventions follow flash_attn: q is [batch, seq, heads, dim]; k/v may have fewer heads
 (GQA); varlen takes packed [total, heads, dim] plus cu_seqlens.
 """
+import importlib.machinery
 import sys
 import types
 
@@ -87,11 +88,24 @@ def range_mod(x, c_mapping, gatings):
     return y.reshape(b, s, h).transpose(0, 1)
 
 
+_FAKE = ("flash_attn", "flash_attn.flash_attn_interface", "flash_attn.layers", "flash_attn.layers.rotary",
+         "flashinfer", "flashinfer.gemm", "flashinfer.activation")
+
+
 def _module(name, **attrs):
     m = types.ModuleType(name)
     m.__dict__.update(attrs)
+    # a real spec, so importlib.util.find_spec(name) works instead of raising "__spec__ is None"
+    m.__spec__ = importlib.machinery.ModuleSpec(name, None)
     sys.modules[name] = m
     return m
+
+
+def uninstall():
+    """Drop the fakes once MAGI is imported (its modules keep their own references), so libraries
+    that probe for flash_attn later (transformers) see it as not installed."""
+    for name in _FAKE:
+        sys.modules.pop(name, None)
 
 
 def _install_fake_triton():

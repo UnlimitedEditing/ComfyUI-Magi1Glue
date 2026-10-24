@@ -75,17 +75,23 @@ def _prepare_environment(root):
 def _import_magi():
     import magi_shims  # sibling module; ComfyUI puts this package dir on sys.path via its loader
 
-    magi_shims.install()
     root = _magi_root()
     _prepare_environment(root)
-    from inference.common import MagiConfig, set_random_seed
-    from inference.infra.distributed import dist_init
-    from inference.model.dit import get_dit
-    from inference.model.dit import dit_module
-    from inference.pipeline import prompt_process
-    from inference.pipeline.prompt_process import get_txt_embeddings
-    from inference.pipeline.video_generate import generate_per_chunk
-    from inference.pipeline.video_process import post_chunk_process
+    # transformers probes for flash_attn when it first loads; do that before the fakes exist
+    from transformers import AutoTokenizer, T5EncoderModel  # noqa: F401
+
+    magi_shims.install()
+    try:
+        from inference.common import MagiConfig, set_random_seed
+        from inference.infra.distributed import dist_init
+        from inference.model.dit import get_dit
+        from inference.model.dit import dit_module
+        from inference.pipeline import prompt_process
+        from inference.pipeline.prompt_process import get_txt_embeddings
+        from inference.pipeline.video_generate import generate_per_chunk
+        from inference.pipeline.video_process import post_chunk_process
+    finally:
+        magi_shims.uninstall()
 
     magi_shims.patch_dit_module(dit_module)
 

@@ -72,6 +72,17 @@ def test_silu_and_mul():
     assert torch.allclose(S.silu_and_mul(x), torch.nn.functional.silu(x[:, :5]) * x[:, 5:])
 
 
+def test_install_has_spec_and_uninstall_removes():
+    import importlib.util
+    import sys
+
+    S.install()
+    assert importlib.util.find_spec("flash_attn") is not None  # was: ValueError __spec__ is None
+    assert importlib.util.find_spec("flashinfer.gemm") is not None
+    S.uninstall()
+    assert "flash_attn" not in sys.modules and "flashinfer" not in sys.modules
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_"):
