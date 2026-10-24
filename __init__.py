@@ -116,7 +116,7 @@ class Magi1TextToVideo:
                 "width": ("INT", {"default": 0, "min": 0, "max": 1920, "step": 16}),
                 "height": ("INT", {"default": 0, "min": 0, "max": 1920, "step": 16}),
                 "num_frames": ("INT", {"default": 48, "min": 24, "max": 480, "step": 24}),
-                "num_steps": ("INT", {"default": 64, "min": 4, "max": 240, "step": 4}),
+                "num_steps": ("INT", {"default": 12, "min": 8, "max": 64, "step": 4}),
             }
         }
 
